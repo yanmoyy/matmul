@@ -10,6 +10,7 @@
 #define MAX_NUM 100 // maximum number of matrix
 
 void exit_with_fail(const char *format, ...);
+bool add_file(const char *filename, Array *files);
 
 int main(int argc, char *argv[])
 {
@@ -20,6 +21,16 @@ int main(int argc, char *argv[])
     int file_num = argc - 1;
     if (file_num > MAX_NUM) {
         exit_with_fail("Too many files (%d > %d)\n", file_num, MAX_NUM);
+    }
+
+    Array files = arr_new(file_num, sizeof(FILE *));
+
+    for (int i = 0; i < file_num; i++) {
+        char *filename = argv[i + 1];
+        bool res = add_file(filename, &files);
+        if (!res) {
+            exit_with_fail("Error: failed to open %s\n", filename);
+        }
     }
 
     printf("Hello world!\n");
@@ -38,13 +49,11 @@ void exit_with_fail(const char *format, ...)
 }
 
 // add file to list, return true if the file exist and no error
-bool add_file(const char *filename, Array *array)
+bool add_file(const char *filename, Array *files)
 {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        return false;
+    }
+    return arr_append(files, &file);
 }
-// {
-//     FILE *file = fopen(filename, "r");
-//     if (file == NULL) {
-//         return false;
-//     }
-//     return true;
-// }

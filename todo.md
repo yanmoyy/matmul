@@ -55,8 +55,6 @@ m21 m22 m23
 - C/C++ 로 구현하세요.
 - 프로그램에 입력되는 행렬 파일의 서식에는 오류가 없다고 가정합니다.
 - 여러 개의 행렬을 입력으로 받으면 순서대로 곱하여 결과를 낼 수 있어야합니다.
-- 행렬곱 알고리즘에 대해서는 검색엔진 사용 금지입니다.
-- std::vector 사용 금지
 
 # pseudocode
 
@@ -73,3 +71,5 @@ m21 m22 m23
 
 - use dynamic array for matrix
   - fixed size: memory leak
+- how to make unit test on c?
+  - use Unity (unit test framework)

@@ -1,61 +1,55 @@
-# Compiler and flags
-CC = x86_64-w64-mingw32-gcc
-CFLAGS = -Wall -Wextra -Werror -std=c11 -O2
+NAME = MatMul
 
-# Directories
+CC = gcc
+CFLAGS = -Wall -Wextra -Iinclude -g
+SRC_DIR = src
 OBJ_DIR = obj
 BIN_DIR = bin
+TEST_DIR = tests
 
-# Target executable names
-TARGET     = $(BIN_DIR)/MatMul.exe
-TEST_TARGET = $(BIN_DIR)/test_array.exe
+# all source files include main.c
+SRCS = $(wildcard $(SRC_DIR)/*.c)
 
-# Source files
-MAIN_SRCS   = main.c
-TEST_SRCS   = test_array.c array.c
-ARRAY_SRCS  = array.c
+# Filter out main.c from the list of files needed by tests
+COMMON_SRCS = $(filter-out $(SRC_DIR)/main.c, $(SRCS))
+TEST_SRCS = $(wildcard $(TEST_DIR)/*.c)
 
-# Object files (automatically placed in obj/)
-MAIN_OBJS   = $(patsubst %.c,$(OBJ_DIR)/%.o,$(MAIN_SRCS))
-TEST_OBJS   = $(patsubst %.c,$(OBJ_DIR)/%.o,$(TEST_SRCS))
-ARRAY_OBJS  = $(patsubst %.c,$(OBJ_DIR)/%.o,$(ARRAY_SRCS))
+# Define object files
+APP_OBJS = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRCS))
+COMMON_OBJS = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(COMMON_SRCS))
+TEST_OBJS = $(patsubst $(TEST_DIR)/%.c, $(OBJ_DIR)/%.o, $(TEST_SRCS))
 
-# Default target
-all: $(TARGET)
+# Targets
+APP_BIN = $(BIN_DIR)/$(NAME)
+TEST_BIN = $(BIN_DIR)/test_$(NAME)
 
-# Build main program
-$(TARGET): $(MAIN_OBJS) | $(BIN_DIR)
-	$(CC) $(CFLAGS) $^ -o $@
+# Ensure directories exist
+$(shell mkdir -p $(BIN_DIR) $(OBJ_DIR))
 
-# Build test program (links array.o too)
-$(TEST_TARGET): $(TEST_OBJS) | $(BIN_DIR)
-	$(CC) $(CFLAGS) $^ -o $@
+$(APP_BIN): $(APP_OBJS)
+	$(CC) $(APP_OBJS) -o $@
 
-# Rule to compile .c → .o into obj/ directory
-$(OBJ_DIR)/%.o: %.c | $(OBJ_DIR)
+$(TEST_BIN): $(COMMON_OBJS) $(TEST_OBJS)
+	$(CC) $(COMMON_OBJS) $(TEST_OBJS) -o $@
+
+# Find object file for each source file (first src, then test)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Create directories if they don't exist
-$(OBJ_DIR):
-	mkdir -p $@
+$(OBJ_DIR)/%.o: $(TEST_DIR)/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BIN_DIR):
-	mkdir -p $@
+test: $(TEST_BIN)
+	./$(TEST_BIN)
 
-# Clean everything
 clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR)
 
-run: $(TARGET)
-	./$(TARGET) matrix/A.txt matrix/B.txt
+run: $(APP_BIN)
+	./$(APP_BIN) matrix/*.txt # add all files in matrix/
 
-# Run tests
-test: $(TEST_TARGET)
-	@echo "Running tests..."
-	./$(TEST_TARGET) 
+bear:
+	make clean
+	bear -- make
 
-# Phony targets (not real files)
-.PHONY: all clean run test
-
-# Prevent make from trying to treat these as files
-.PRECIOUS: $(OBJ_DIR)/%.o
+.PHONY: all test clean run bear
