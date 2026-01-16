@@ -11,11 +11,11 @@ typedef struct {
     void *data;    // pointer to allocated memory (non-const!)
 } Array;
 
-Array arr_new(size_t initial_cap, size_t elem_size);
+Array *arr_new(size_t initial_cap, size_t elem_size);
 void *arr_get(const Array *arr, size_t index);
 bool arr_append(Array *arr, const void *value);            // append
 bool arr_set(Array *arr, size_t index, const void *value); // update existing
-void arr_free(Array *arr);
+void arr_free(Array **arr);
 bool arr_out_of_range(const Array *arr, size_t index);
 
 // Optional helpers

@@ -14,6 +14,7 @@ bool add_file(const char *filename, Array *files);
 
 int main(int argc, char *argv[])
 {
+    // STEP 1. Check Arguemnts
     if (argc < 3) {
         exit_with_fail("Usage: %s file1 file2 ...\n", argv[0]);
     }
@@ -23,6 +24,7 @@ int main(int argc, char *argv[])
         exit_with_fail("Too many files (%d > %d)\n", file_num, MAX_NUM);
     }
 
+    // STEP 2. Open the files
     Array files = arr_new(file_num, sizeof(FILE *));
 
     for (int i = 0; i < file_num; i++) {
@@ -33,6 +35,10 @@ int main(int argc, char *argv[])
         }
     }
 
+    // STEP 3. Read the file and parse to matrix
+    for (int i = 0; i < file_num; i++) {
+        FILE *file = (FILE *)arr_get(&files, i);
+    }
     printf("Hello world!\n");
     return 0;
 }
