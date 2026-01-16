@@ -1,4 +1,9 @@
 #include "matrix.h"
 
-Matrix *parse_matrix(size_t row, size_t col, char *name, FILE *file);
-void print_matrix(Matrix *matrix);
+Matrix *new_matrix_with_2D_array(size_t d_size, size_t row, size_t col, void *array)
+{
+}
+
+void print_matrix(Matrix *matrix)
+{
+}

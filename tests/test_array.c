@@ -28,7 +28,6 @@ void test_int_array()
         int *got = arr_get(arr, i);
         assert(got != NULL);
         assert(*got == values[i]);
-        // optional: printf("arr[%zu] = %d\n", i, *got);
     }
     assert(arr_get(arr, arr->len) == NULL);
     assert(!arr_append(arr, NULL));
@@ -50,7 +49,6 @@ void test_double_array()
         double *got = arr_get(arr, i);
         assert(got != NULL);
         assert(DOUBLE_EQ(*got, vals[i]));
-        // optional: printf("arr[%zu] = %.9f\n", i, *got);
     }
     double new_val = 42.195;
     bool set_ok = arr_set(arr, 1, &new_val);
