@@ -1,3 +1,5 @@
+#include "array.h"
+
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -35,8 +37,10 @@ void exit_with_fail(const char *format, ...)
     exit(EXIT_FAILURE);
 }
 
-// // add file to list, return true if the file exist and no error
-// bool add_file(const char *filename, FILE *array[MAX_NUM])
+// add file to list, return true if the file exist and no error
+bool add_file(const char *filename, Array *array)
+{
+}
 // {
 //     FILE *file = fopen(filename, "r");
 //     if (file == NULL) {

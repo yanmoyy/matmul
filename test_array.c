@@ -1,110 +1,139 @@
 #include "array.h"
 #include <assert.h>
+#include <math.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-// Test with primitive types
-void test_int_array(void)
+// Helper macro for floating-point comparison
+#define DOUBLE_EQ(a, b) (fabs((a) - (b)) < 1e-9)
+
+// Test with integers
+static void test_int_array(void)
 {
-    printf("\n=== Testing int array ===\n");
+    printf("\n[TEST] Integer array (push_back + growth)\n");
 
-    Array arr = arr_new(5, sizeof(int));
+    Array arr = arr_new(0, sizeof(int));
+    assert(arr.len == 0);
+    assert(arr.cap >= 1); // should have some minimum capacity
+    assert(arr.d_size == sizeof(int));
     assert(arr.data != NULL);
-    assert(arr.n == 5);
-    assert(arr.size == sizeof(int));
 
-    // Update some values
-    int values[] = { 10, 20, 30, 40, 50 };
-    for (size_t i = 0; i < 5; i++) {
-        bool ok = arr_update(&arr, i, &values[i]);
+    int values[] = { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
+    size_t num = sizeof(values) / sizeof(values[0]);
+
+    for (size_t i = 0; i < num; i++) {
+        bool ok = arr_append(&arr, &values[i]);
         assert(ok);
+        assert(arr.len == i + 1);
     }
 
-    // Get and verify
-    for (size_t i = 0; i < 5; i++) {
+    // Check capacity is power of 2 and >= len
+    assert((arr.cap & (arr.cap - 1)) == 0); // is power of 2
+    assert(arr.cap >= arr.len);
+
+    // Verify content
+    for (size_t i = 0; i < arr.len; i++) {
         int *got = arr_get(&arr, i);
         assert(got != NULL);
         assert(*got == values[i]);
         printf("arr[%zu] = %d\n", i, *got);
     }
 
-    // Out of range checks
-    assert(arr_get(&arr, 5) == NULL);
-    assert(arr_get(&arr, 999) == NULL);
-    assert(!arr_update(&arr, 5, &values[0]));
-    assert(!arr_update(&arr, (size_t)-1, &values[0]));
+    // Out of range
+    assert(arr_get(&arr, arr.len) == NULL);
+    assert(!arr_append(&arr, NULL)); // null value
 
     arr_free(&arr);
     assert(arr.data == NULL);
-    printf("Int array tests passed ✓\n");
+    assert(arr.len == 0);
+    assert(arr.cap == 0);
+
+    printf("→ Integer test passed ✓\n");
 }
 
 // Test with doubles
-void test_double_array(void)
+static void test_double_array(void)
 {
-    printf("\n=== Testing double array ===\n");
+    printf("\n[TEST] Double array\n");
 
-    Array arr = arr_new(4, sizeof(double));
-    double vals[] = { 1.1, 2.718, 3.14159, 42.0 };
+    Array arr = arr_new(3, sizeof(double));
+    double vals[] = { 1.414213562, 2.718281828, 3.141592653 };
 
-    for (size_t i = 0; i < 4; i++) {
-        arr_update(&arr, i, &vals[i]);
+    for (size_t i = 0; i < 3; i++) {
+        bool ok = arr_append(&arr, &vals[i]);
+        assert(ok);
     }
 
-    for (size_t i = 0; i < 4; i++) {
+    for (size_t i = 0; i < arr.len; i++) {
         double *got = arr_get(&arr, i);
         assert(got != NULL);
-        assert(*got == vals[i]);
-        printf("arr[%zu] = %.5f\n", i, *got);
+        assert(DOUBLE_EQ(*got, vals[i]));
+        printf("arr[%zu] = %.9f\n", i, *got);
     }
 
+    // Test set (overwrite)
+    double new_val = 42.195;
+    bool set_ok = arr_set(&arr, 1, &new_val);
+    assert(set_ok);
+
+    double *updated = arr_get(&arr, 1);
+    assert(DOUBLE_EQ(*updated, 42.195));
+
     arr_free(&arr);
-    assert(arr.data == NULL);
-    printf("Double array tests passed ✓\n");
+    printf("→ Double test passed ✓\n");
 }
 
-// Test with a struct
+// Test with struct
 typedef struct {
     int id;
-    char name[16];
-} Person;
+    char name[20];
+    float score;
+} Student;
 
-void test_struct_array(void)
+static void test_struct_array(void)
 {
-    printf("\n=== Testing struct array ===\n");
+    printf("\n[TEST] Struct array + growth\n");
 
-    Array arr = arr_new(3, sizeof(Person));
+    Array arr = arr_new(2, sizeof(Student));
 
-    Person p1 = { 1, "Alice" };
-    Person p2 = { 2, "Bob" };
-    Person p3 = { 3, "Charlie" };
+    Student s1 = { 101, "Alice Kim", 95.5f };
+    Student s2 = { 102, "Bob Park", 88.0f };
+    Student s3 = { 103, "Charlie Lee", 92.75f };
+    Student s4 = { 104, "Dana Choi", 97.25f };
 
-    arr_update(&arr, 0, &p1);
-    arr_update(&arr, 1, &p2);
-    arr_update(&arr, 2, &p3);
+    assert(arr_append(&arr, &s1));
+    assert(arr_append(&arr, &s2));
+    assert(arr_append(&arr, &s3));
+    assert(arr_append(&arr, &s4));
 
-    Person *got = arr_get(&arr, 1);
+    assert(arr.len == 4);
+    assert(arr.cap >= 4);
+    assert((arr.cap & (arr.cap - 1)) == 0); // power of 2
+
+    // Verify data
+    Student *got = arr_get(&arr, 2);
     assert(got != NULL);
-    assert(got->id == 2);
-    assert(strcmp(got->name, "Bob") == 0);
-    printf("arr[1] = {id=%d, name=%s}\n", got->id, got->name);
+    assert(got->id == 103);
+    assert(strcmp(got->name, "Charlie Lee") == 0);
+    assert(fabs(got->score - 92.75f) < 0.001f);
 
-    assert(arr_get(&arr, 3) == NULL);
+    printf("arr[2] = {id=%d, name=%s, score=%.2f}\n",
+        got->id, got->name, got->score);
 
     arr_free(&arr);
-    assert(arr.data == NULL);
-    printf("Struct array tests passed ✓\n");
+    printf("→ Struct test passed ✓\n");
 }
 
 int main(void)
 {
-    printf("=== Starting array tests ===\n");
+    printf("=== Dynamic Array Tests ===\n");
 
     test_int_array();
     test_double_array();
     test_struct_array();
 
-    printf("\nAll tests passed successfully!\n");
+    printf("\nAll tests completed successfully!\n");
     return 0;
 }
