@@ -7,7 +7,7 @@
 // Helper macro for floating-point comparison
 #define DOUBLE_EQ(a, b) (fabs((a) - (b)) < 1e-9)
 
-void test_int_array(void)
+void test_int_array()
 {
     test_start("Integer array (push_back + growth)"); // Replaces printf
     Array *arr = arr_new(0, sizeof(int));
@@ -37,7 +37,7 @@ void test_int_array(void)
     test_success(); // Replaces printf
 }
 
-void test_double_array(void)
+void test_double_array()
 {
     test_start("Double array");
     Array *arr = arr_new(3, sizeof(double));
@@ -67,7 +67,7 @@ typedef struct {
     float score;
 } Student;
 
-void test_struct_array(void)
+void test_struct_array()
 {
     test_start("Struct array + growth");
     Array *arr = arr_new(2, sizeof(Student));

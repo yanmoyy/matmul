@@ -12,7 +12,7 @@ void test_start(const char *test_name)
     tests_total++; // Increment on start
 }
 
-void test_success(void)
+void test_success()
 {
     printf("→ %s passed ✓\n", tests_total == 1 ? "Test" : "Test"); // Singular/plural if needed
     tests_passed++;
@@ -24,7 +24,7 @@ void test_fail(const char *msg)
     exit(1); // Or return a non-zero code if you prefer no exit
 }
 
-void test_summary(void)
+void test_summary()
 {
     printf("\n=== Summary ===\n");
     printf("Passed: %d/%d tests ✓\n", tests_passed, tests_total);
