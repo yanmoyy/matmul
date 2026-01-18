@@ -1,29 +1,31 @@
 #include "matrix.h"
-#include "utils.h"
+#include "test_utils.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
-// TODO: need to handle memory leak when the test failed!!!
+static bool test_failed = false;
 
-static void assert_matrix_meta(const Matrix *m, size_t row, size_t col, m_type_t type, const char *name)
+static bool check_matrix_meta(const Matrix *m, size_t row, size_t col, m_type_t type, const char *name)
 {
-    assert(m != NULL);
-    assert(m->row == row);
-    assert(m->col == col);
-    assert(m->type == type);
+    if (m == NULL
+        || m->row != row
+        || m->col != col
+        || m->type != type) {
+        return false;
+    }
     if (name == NULL) {
-        assert(m->name == NULL);
+        return m->name == NULL;
     } else {
-        assert(strcmp(m->name, name) == 0);
+        return strcmp(m->name, name) == 0;
     }
 }
 
-static void assert_matrix_data(const Matrix *m, const void *expected)
+static bool check_matrix_data(const Matrix *m, const void *expected)
 {
     if (!m || !m->data || !expected) {
-        test_fail("assert_matrix_data: NULL pointer");
-        return;
+        // null pointer
+        return false;
     }
 
     size_t count = m->row * m->col;
@@ -56,90 +58,94 @@ static void assert_matrix_data(const Matrix *m, const void *expected)
         CHECK(double, "%g");
         break;
     default:
-        test_fail("Unsupported matrix type");
-        return;
+        return false;
     }
 
 #undef CHECK
     if (mismatch_found) {
         print_matrix(m);
-        test_fail("matrix mismatched");
+        return false;
     }
-}
-
-static void free_and_check(Matrix **m)
-{
-    free_matrix(m);
-    assert(*m == NULL);
+    return true;
 }
 
 static void test_new_matrix_basic()
 {
     test_start("new_matrix - basic allocation");
-    Matrix *m = new_matrix(3, 4, M_TYPE_INT, "test");
-    assert_matrix_meta(m, 3, 4, M_TYPE_INT, "test");
+
+    Matrix *m1 = NULL, *m2 = NULL;
+    m1 = new_matrix(3, 4, M_TYPE_INT, "test");
+    T_ASSERT(check_matrix_meta(m1, 3, 4, M_TYPE_INT, "test"));
 
     int expected[3][4] = { { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } };
-    assert_matrix_data(m, expected);
-    free_and_check(&m);
+    T_ASSERT(check_matrix_data(m1, expected));
 
     // check null name
-    m = new_matrix(3, 4, M_TYPE_INT, NULL);
-    assert_matrix_meta(m, 3, 4, M_TYPE_INT, NULL);
-    free_and_check(&m);
+    m2 = new_matrix(3, 4, M_TYPE_INT, NULL);
+    T_ASSERT(check_matrix_meta(m2, 3, 4, M_TYPE_INT, NULL));
 
-    test_success();
+cleanup:
+    free_matrix(&m1);
+    free_matrix(&m2);
+
+    T_CHECK_TEST_FAIL("new_matrix failed");
 }
 
 static void test_new_matrix_with_2D_array()
 {
     test_start("new_matrix_with_2D_array");
 
+    Matrix *m1 = NULL, *m2 = NULL, *m3 = NULL;
+
     int data_int[2][3] = {
         { 1, 2, 3 },
         { 4, 5, 6 }
     };
-    Matrix *m = new_matrix_with_2D_array(2, 3, M_TYPE_INT, "test", data_int);
-    assert_matrix_meta(m, 2, 3, M_TYPE_INT, "test");
-    assert_matrix_data(m, data_int);
-    free_and_check(&m);
+    m1 = new_matrix_with_2D_array(2, 3, M_TYPE_INT, "test", data_int);
+    T_ASSERT(check_matrix_meta(m1, 2, 3, M_TYPE_INT, "test"));
+    T_ASSERT(check_matrix_data(m1, data_int));
 
     float data_float[2][3] = {
         { 1.25f, -2.50f, 3.75f },
         { 10.00f, 0.125f, -5.5f }
     };
-    m = new_matrix_with_2D_array(2, 3, M_TYPE_FLOAT, "test", data_float);
-    assert_matrix_meta(m, 2, 3, M_TYPE_FLOAT, "test");
-    assert_matrix_data(m, data_float);
-    free_and_check(&m);
+    m2 = new_matrix_with_2D_array(2, 3, M_TYPE_FLOAT, "test", data_float);
+    T_ASSERT(check_matrix_meta(m2, 2, 3, M_TYPE_FLOAT, "test"));
+    T_ASSERT(check_matrix_data(m2, data_float));
 
     double data_double[2][3] = {
         { 1.25, -2.50, 3.75 },
         { 10.00, 0.125, -5.5 }
     };
-    m = new_matrix_with_2D_array(2, 3, M_TYPE_DOUBLE, "test", data_double);
-    assert_matrix_meta(m, 2, 3, M_TYPE_DOUBLE, "test");
-    assert_matrix_data(m, data_double);
-    free_and_check(&m);
+    m3 = new_matrix_with_2D_array(2, 3, M_TYPE_DOUBLE, "test", data_double);
+    T_ASSERT(check_matrix_meta(m3, 2, 3, M_TYPE_DOUBLE, "test"));
+    T_ASSERT(check_matrix_data(m3, data_double));
 
-    test_success();
+cleanup:
+    free_matrix(&m1);
+    free_matrix(&m2);
+    free_matrix(&m3);
+
+    T_CHECK_TEST_FAIL("new_matrix_with_2D_array failed");
 }
 
 static void test_matrix_to_string()
 {
     test_start("matrix_to_string");
 
+    Matrix *m1 = NULL, *m2 = NULL;
+
     int data_int[2][3] = {
         { 1, 2, 3 },
         { 4, 5, 6 }
     };
 
-    Matrix *m = new_matrix_with_2D_array(2, 3, M_TYPE_INT, "test", data_int);
-    assert_matrix_meta(m, 2, 3, M_TYPE_INT, "test");
+    m1 = new_matrix_with_2D_array(2, 3, M_TYPE_INT, "test", data_int);
+    T_ASSERT(check_matrix_meta(m1, 2, 3, M_TYPE_INT, "test"));
 
     char buf[1024] = { 0 };
-    int len = matrix_to_string(m, buf, sizeof buf);
-    assert(len > 0);
+    int len = matrix_to_string(m1, buf, sizeof buf);
+    T_ASSERT(len > 0);
 
     const char *expected = "Matrix (test): 2 × 3, type = int\n"
                            "Data:\n"
@@ -148,18 +154,16 @@ static void test_matrix_to_string()
 
     if (strcmp(buf, expected) != 0) {
         print_string_diff(buf, expected);
-        test_fail("matrix_to_string failed");
+        T_ASSERT(false);
         return;
     }
 
-    free_and_check(&m);
-
     // test matrix_to_string with NULL name
+    m2 = new_matrix_with_2D_array(2, 3, M_TYPE_INT, NULL, data_int);
+    T_ASSERT(check_matrix_meta(m2, 2, 3, M_TYPE_INT, NULL));
 
-    m = new_matrix_with_2D_array(2, 3, M_TYPE_INT, NULL, data_int);
-    assert_matrix_meta(m, 2, 3, M_TYPE_INT, NULL);
-    len = matrix_to_string(m, buf, sizeof buf);
-    assert(len > 0);
+    len = matrix_to_string(m2, buf, sizeof buf);
+    T_ASSERT(len > 0);
 
     expected = "Matrix (NULL): 2 × 3, type = int\n"
                "Data:\n"
@@ -168,12 +172,14 @@ static void test_matrix_to_string()
 
     if (strcmp(buf, expected) != 0) {
         print_string_diff(buf, expected);
-        free_matrix(&m);
-        test_fail("matrix_to_string failed");
+        T_ASSERT(false);
     }
 
-    free_and_check(&m);
-    test_success();
+cleanup:
+    free_matrix(&m1);
+    free_matrix(&m2);
+
+    T_CHECK_TEST_FAIL("matrix_to_string failed");
 }
 
 static void test_get_matrix_name()
@@ -205,14 +211,15 @@ static void test_get_matrix_name()
         char buf[1024];
         int ret = get_matrix_name(tests[i].filepath, buf, sizeof buf);
         if (tests[i].is_error) {
-            assert(ret == -1);
+            T_ASSERT(ret == -1);
             continue;
         }
-        assert(ret == (int)strlen(tests[i].expected));
-        assert(strcmp(buf, tests[i].expected) == 0);
+        T_ASSERT(ret == (int)strlen(tests[i].expected));
+        T_ASSERT(strcmp(buf, tests[i].expected) == 0);
     }
 
-    test_success();
+cleanup:
+    T_CHECK_TEST_FAIL("get_matrix_name failed");
 }
 
 static void test_multiply_matrices()
@@ -234,17 +241,17 @@ static void test_multiply_matrices()
 
     Matrix *m1_ = new_matrix_with_2D_array(2, 3, M_TYPE_INT, "m1", m1);
     Matrix *m2_ = new_matrix_with_2D_array(3, 2, M_TYPE_INT, "m2", m2);
-
     Matrix *result = matrix_multiply(m1_, m2_);
 
-    assert_matrix_meta(result, 2, 2, M_TYPE_INT, "m1m2");
-    assert_matrix_data(result, expected);
+    T_ASSERT(check_matrix_meta(result, 2, 2, M_TYPE_INT, "m1m2"));
+    T_ASSERT(check_matrix_data(result, expected));
 
-    free_and_check(&m1_);
-    free_and_check(&m2_);
-    free_and_check(&result);
+cleanup:
+    free_matrix(&m1_);
+    free_matrix(&m2_);
+    free_matrix(&result);
 
-    test_success();
+    T_CHECK_TEST_FAIL("matrix_multiply failed");
 }
 
 void run_matrix_tests()

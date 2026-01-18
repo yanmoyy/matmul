@@ -1,7 +1,6 @@
-#include "utils.h"
+#include "test_utils.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 // Static counter for summary (shared across tests)
 static int tests_passed = 0;
@@ -21,7 +20,7 @@ void test_success()
 
 void test_fail(const char *msg)
 {
-    printf("\n[FAIL] %s\n", msg);
+    fprintf(stderr, "[FAIL] %s\n", msg);
     exit(1);
 }
 

@@ -5,7 +5,7 @@
 
 static size_t get_element_size(m_type_t type);
 static const char *type_to_string(m_type_t type);
-static const char *concat(const char *s1, const char *s2);
+static char *concat(const char *s1, const char *s2);
 
 Matrix *new_matrix(size_t row, size_t col, m_type_t type, const char *name)
 {
@@ -156,7 +156,9 @@ Matrix *matrix_multiply(Matrix *m1, Matrix *m2)
         return NULL;
     }
 
-    Matrix *m3 = new_matrix(m1->row, m2->col, m1->type, concat(m1->name, m2->name));
+    char *name = concat(m1->name, m2->name);
+    Matrix *m3 = new_matrix(m1->row, m2->col, m1->type, name);
+    free(name); // IMPORTANT: free name before return
 
     int n = m1->col;
 
@@ -259,7 +261,7 @@ static const char *type_to_string(m_type_t type)
     }
 }
 
-static const char *concat(const char *s1, const char *s2)
+static char *concat(const char *s1, const char *s2)
 {
     char *result = malloc(strlen(s1) + strlen(s2) + 1);
     strcpy(result, s1);
