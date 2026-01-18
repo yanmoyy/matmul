@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
-static void assert_matrix(const Matrix *m, size_t row, size_t col, m_type_t type, const char *name)
+static void assert_matrix_meta(const Matrix *m, size_t row, size_t col, m_type_t type, const char *name)
 {
     assert(m != NULL);
     assert(m->row == row);
@@ -18,65 +18,111 @@ static void assert_matrix(const Matrix *m, size_t row, size_t col, m_type_t type
     }
 }
 
+static void assert_matrix_data(const Matrix *m, const void *expected)
+{
+    if (!m || !m->data || !expected) {
+        test_fail("assert_matrix_data: NULL pointer");
+        return;
+    }
+
+    size_t count = m->row * m->col;
+    int mismatch_found = 0;
+
+#define CHECK(type, fmt)                                                                           \
+    do {                                                                                           \
+        const type *got = (const type *)m->data;                                                   \
+        const type *exp = (const type *)expected;                                                  \
+        for (size_t i = 0; i < count; i++) {                                                       \
+            if (got[i] != exp[i]) {                                                                \
+                if (!mismatch_found) {                                                             \
+                    printf("Data mismatch at index (%zu, %zu): got= " fmt ", expected= " fmt "\n", \
+                        i / m->col, i % m->col, got[i], exp[i]);                                   \
+                    mismatch_found = 1;                                                            \
+                    break;                                                                         \
+                }                                                                                  \
+            }                                                                                      \
+        }                                                                                          \
+    } while (0)
+
+    switch (m->type) {
+    case M_TYPE_INT:
+        CHECK(int, "%d");
+        break;
+    case M_TYPE_FLOAT:
+        CHECK(float, "%g");
+        break;
+    case M_TYPE_DOUBLE:
+        CHECK(double, "%g");
+        break;
+    default:
+        test_fail("Unsupported matrix type");
+        return;
+    }
+
+#undef CHECK
+
+    assert(!mismatch_found);
+}
+
 static void free_and_check(Matrix **m)
 {
     free_matrix(m);
     assert(*m == NULL);
 }
 
-void test_new_matrix_basic()
+static void test_new_matrix_basic()
 {
     test_start("new_matrix - basic allocation");
     Matrix *m = new_matrix(3, 4, M_TYPE_INT, "test");
-    assert_matrix(m, 3, 4, M_TYPE_INT, "test");
+    assert_matrix_meta(m, 3, 4, M_TYPE_INT, "test");
 
-    // check data is all zero
-    for (size_t i = 0; i < m->row * m->col; i++) {
-        assert(((int *)m->data)[i] == 0);
-    }
-
+    int expected[3][4] = { { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } };
+    assert_matrix_data(m, expected);
     free_and_check(&m);
 
     // check null name
     m = new_matrix(3, 4, M_TYPE_INT, NULL);
-    assert_matrix(m, 3, 4, M_TYPE_INT, NULL);
+    assert_matrix_meta(m, 3, 4, M_TYPE_INT, NULL);
     free_and_check(&m);
 
     test_success();
 }
 
-void test_new_matrix_with_2D_array_double()
+static void test_new_matrix_with_2D_array()
 {
-    test_start("new_matrix_with_2D_array - double 3×3");
+    test_start("new_matrix_with_2D_array");
 
-    double data[3][3] = {
-        { 1.25, -2.50, 3.75 },
-        { 10.00, 0.125, -5.5 },
-        { 7.50, 8.75, 9.00 }
+    int data_int[2][3] = {
+        { 1, 2, 3 },
+        { 4, 5, 6 }
     };
-
-    Matrix *m = new_matrix_with_2D_array(3, 3, M_TYPE_DOUBLE, "test", data);
-    assert_matrix(m, 3, 3, M_TYPE_DOUBLE, "test");
-
-    double *flat = (double *)m->data;
-    double expected[] = { 1.25, -2.50, 3.75, 10.00, 0.125, -5.5, 7.50, 8.75, 9.00 };
-
-    int ok = 1;
-    for (int i = 0; i < 9; i++) {
-        if (flat[i] != expected[i]) {
-            printf("Data mismatch at %d: got %f, want %f\n", i, flat[i], expected[i]);
-            ok = 0;
-            break;
-        }
-    }
-    if (ok) {
-        test_success();
-    } else {
-        test_fail("double data copy failed");
-    }
+    Matrix *m = new_matrix_with_2D_array(2, 3, M_TYPE_INT, "test", data_int);
+    assert_matrix_meta(m, 2, 3, M_TYPE_INT, "test");
+    assert_matrix_data(m, data_int);
     free_and_check(&m);
+
+    float data_float[2][3] = {
+        { 1.25f, -2.50f, 3.75f },
+        { 10.00f, 0.125f, -5.5f }
+    };
+    m = new_matrix_with_2D_array(2, 3, M_TYPE_FLOAT, "test", data_float);
+    assert_matrix_meta(m, 2, 3, M_TYPE_FLOAT, "test");
+    assert_matrix_data(m, data_float);
+    free_and_check(&m);
+
+    double data_double[2][3] = {
+        { 1.25, -2.50, 3.75 },
+        { 10.00, 0.125, -5.5 }
+    };
+    m = new_matrix_with_2D_array(2, 3, M_TYPE_DOUBLE, "test", data_double);
+    assert_matrix_meta(m, 2, 3, M_TYPE_DOUBLE, "test");
+    assert_matrix_data(m, data_double);
+    free_and_check(&m);
+
+    test_success();
 }
-void test_matrix_to_string()
+
+static void test_matrix_to_string()
 {
     test_start("matrix_to_string");
 
@@ -86,7 +132,7 @@ void test_matrix_to_string()
     };
 
     Matrix *m = new_matrix_with_2D_array(2, 3, M_TYPE_INT, "test", data_int);
-    assert_matrix(m, 2, 3, M_TYPE_INT, "test");
+    assert_matrix_meta(m, 2, 3, M_TYPE_INT, "test");
 
     char buf[1024] = { 0 };
     int len = matrix_to_string(m, buf, sizeof buf);
@@ -112,11 +158,8 @@ void run_matrix_tests()
 {
     printf("\n=== Matrix Tests ===\n");
     test_new_matrix_basic();
-    // test_print_matrix();
     test_matrix_to_string();
-    // test_new_matrix_with_2D_array_int();
-    // test_print_matrix_double();
-    // test_parse_matrix_dummy();   // uncomment when you have a test file
+    test_new_matrix_with_2D_array();
 
     printf("\nMatrix tests finished.\n");
 }
