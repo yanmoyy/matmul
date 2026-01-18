@@ -17,8 +17,4 @@ bool arr_append(Array *arr, const void *value);            // append
 bool arr_set(Array *arr, size_t index, const void *value); // update existing
 void arr_free(Array **arr);
 bool arr_out_of_range(const Array *arr, size_t index);
-
-// Optional helpers
-size_t next_power_of_2(size_t n);
-
 #endif

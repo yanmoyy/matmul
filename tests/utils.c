@@ -1,6 +1,7 @@
 #include "utils.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 // Static counter for summary (shared across tests)
 static int tests_passed = 0;
@@ -33,4 +34,29 @@ void test_summary()
     } else {
         printf("Some tests failed! Check the output above.\n");
     }
+}
+
+void print_string_diff(const char *got, const char *expected)
+{
+    printf("\nExpected (with visible escapes):\n");
+    for (const char *p = expected; *p; p++) {
+        if (*p == '\n') {
+            printf("\\n\n");
+        } else if (*p == ' ') {
+            printf("·"); // middle dot for space
+        } else {
+            printf("%c", *p);
+        }
+    }
+    printf("\n\nGot (with visible escapes):\n");
+    for (const char *p = got; *p; p++) {
+        if (*p == '\n') {
+            printf("\\n\n");
+        } else if (*p == ' ') {
+            printf("·");
+        } else {
+            printf("%c", *p);
+        }
+    }
+    printf("\n");
 }

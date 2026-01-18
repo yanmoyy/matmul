@@ -4,31 +4,37 @@
 #include <stddef.h>
 #include <stdio.h>
 
-enum m_type {
-    INT,
-    FLOAT,
-    DOUBLE,
-} M_TYPE;
+typedef enum {
+    M_TYPE_INT,
+    M_TYPE_FLOAT,
+    M_TYPE_DOUBLE,
+} m_type_t;
 
-enum {
+typedef enum {
     INITIAL,
     ROW_STEP,
     COL_STEP,
     MAT_STEP,
     FINISH,
-} M_FILL_STATE;
+} m_step_t;
 
-typedef struct {
-    enum type type;
+typedef struct Matrix {
+    m_type_t type;
     size_t row;
     size_t col;
-    char *name;
+    const char *name;
     void *data; // 2D (array of array)
 } Matrix;
 
-Matrix *parse_matrix(size_t row, size_t col, char *name, FILE *file);
-Matrix *new_matrix_with_2D_array(size_t row, size_t col, void *array);
+Matrix *new_matrix(size_t row, size_t col, m_type_t type, const char *name);
+Matrix *new_matrix_with_2D_array(size_t row, size_t col, m_type_t type, const char *name, void *array);
+Matrix *new_matrix_from_file(size_t row, size_t col, m_type_t type, char *name, FILE *file);
 
-void print_matrix(Matrix *matrix);
+Matrix *multiply_matrices(Matrix *m1, Matrix *m2);
+int matrix_to_string(const Matrix *m, char *buf, size_t bufsize);
+void print_matrix(const Matrix *m);
+void free_matrix(Matrix **m);
+// Helpers
+size_t get_element_size(m_type_t type);
 
 #endif

@@ -52,4 +52,12 @@ bear:
 	make clean
 	bear -- make
 
-.PHONY: all test clean run bear
+valgrind:
+	valgrind -s --leak-check=full --show-leak-kinds=all ./$(APP_BIN) matrix/*.txt
+
+valgrind-test:	
+	make clean
+	make $(TEST_BIN)
+	valgrind -s --leak-check=full --show-leak-kinds=all ./$(TEST_BIN)
+
+.PHONY: test clean run bear valgrind

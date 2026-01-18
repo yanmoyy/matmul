@@ -2,10 +2,8 @@
 #include "utils.h"
 #include <assert.h>
 #include <math.h>
+#include <stdio.h>
 #include <string.h>
-
-// Helper macro for floating-point comparison
-#define DOUBLE_EQ(a, b) (fabs((a) - (b)) < 1e-9)
 
 void test_int_array()
 {
@@ -87,4 +85,13 @@ void test_struct_array()
     assert(fabs(got->score - 92.75f) < 0.001f);
     arr_free(&arr);
     test_success();
+}
+
+void run_array_tests()
+{
+    printf("\n=== Dynamic Array Tests ===\n");
+    test_int_array();
+    test_double_array();
+    test_struct_array();
+    printf("\nArray tests finished.\n");
 }

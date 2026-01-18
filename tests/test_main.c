@@ -1,20 +1,14 @@
 #include "utils.h"
-#include <stdio.h>
 
-void test_int_array();
-void test_double_array();
-void test_struct_array();
-void test_print_matrix();
+void run_array_tests();
+void run_matrix_tests();
 
 int main()
 {
-    printf("=== Dynamic Array Tests ===\n");
-    test_int_array();
-    test_double_array();
-    test_struct_array();
+    run_array_tests();
 
-    printf("=== Matrix Tests ===\n");
-    test_print_matrix();
+    // printf("=== Matrix Tests ===\n");
+    run_matrix_tests();
 
     test_summary(); // Replaces the hardcoded message
     return 0;

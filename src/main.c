@@ -1,5 +1,4 @@
 #include "array.h"
-#include "matrix.h"
 
 #include <stdarg.h>
 #include <stdbool.h>
@@ -13,7 +12,7 @@
 void exit_with_fail(const char *format, ...);
 bool add_file(Array *files, const char *filename);
 void close_files(Array *files);
-Matrix *parse_file_to_matrix(FILE **file_ptr);
+// Matrix *parse_file_to_matrix(FILE **file_ptr);
 
 int main(int argc, char *argv[])
 {
@@ -60,8 +59,8 @@ int main(int argc, char *argv[])
         printf("row: %d\n", row);
         printf("col: %d\n", col);
 
-        Matrix *m = parse_matrix(row, col, argv[i], file);
-        print_matrix(m);
+        // Matrix *m = parse_matrix(row, col, argv[i], file);
+        // print_matrix(m);
     }
 
     close_files(files);
