@@ -15,14 +15,14 @@ void test_start(const char *test_name)
 
 void test_success()
 {
-    printf("→ %s passed ✓\n", tests_total == 1 ? "Test" : "Test"); // Singular/plural if needed
+    printf("→ %s passed ✓\n", tests_total == 1 ? "Test" : "Tests");
     tests_passed++;
 }
 
 void test_fail(const char *msg)
 {
     printf("\n[FAIL] %s\n", msg);
-    exit(1); // Or return a non-zero code if you prefer no exit
+    exit(1);
 }
 
 void test_summary()

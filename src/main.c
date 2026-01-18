@@ -76,7 +76,6 @@ int main(int argc, char *argv[])
                 fscanf(file, "%d", &data[i][j]);
             }
         }
-
         Matrix *m = new_matrix_with_2D_array(row, col, M_TYPE_INT, name, data);
         print_matrix(m);
         free_matrix(&m);

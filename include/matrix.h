@@ -22,14 +22,15 @@ typedef struct Matrix {
     m_type_t type;
     size_t row;
     size_t col;
-    const char *name;
+    char *name;
     void *data; // 2D (array of array)
 } Matrix;
 
 Matrix *new_matrix(size_t row, size_t col, m_type_t type, const char *name);
 Matrix *new_matrix_with_2D_array(size_t row, size_t col, m_type_t type, const char *name, void *array);
 
-Matrix *multiply_matrices(Matrix *m1, Matrix *m2);
+Matrix *matrix_multiply(Matrix *m1, Matrix *m2);
+
 int matrix_to_string(const Matrix *m, char *buf, size_t bufsize);
 void print_matrix(const Matrix *m);
 void free_matrix(Matrix **m);

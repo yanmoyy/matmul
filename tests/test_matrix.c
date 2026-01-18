@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
+// TODO: need to handle memory leak when the test failed!!!
+
 static void assert_matrix_meta(const Matrix *m, size_t row, size_t col, m_type_t type, const char *name)
 {
     assert(m != NULL);
@@ -59,7 +61,10 @@ static void assert_matrix_data(const Matrix *m, const void *expected)
     }
 
 #undef CHECK
-    assert(!mismatch_found);
+    if (mismatch_found) {
+        print_matrix(m);
+        test_fail("matrix mismatched");
+    }
 }
 
 static void free_and_check(Matrix **m)
@@ -163,12 +168,11 @@ static void test_matrix_to_string()
 
     if (strcmp(buf, expected) != 0) {
         print_string_diff(buf, expected);
+        free_matrix(&m);
         test_fail("matrix_to_string failed");
-        return;
     }
 
     free_and_check(&m);
-
     test_success();
 }
 
@@ -211,6 +215,38 @@ static void test_get_matrix_name()
     test_success();
 }
 
+static void test_multiply_matrices()
+{
+    test_start("multiply_matrices");
+    int m1[2][3] = {
+        { 1, 2, 3 },
+        { 4, 5, 6 }
+    };
+    int m2[3][2] = {
+        { 1, 4 },
+        { 2, 5 },
+        { 3, 6 }
+    };
+    int expected[2][2] = {
+        { 14, 32 },
+        { 32, 77 }
+    };
+
+    Matrix *m1_ = new_matrix_with_2D_array(2, 3, M_TYPE_INT, "m1", m1);
+    Matrix *m2_ = new_matrix_with_2D_array(3, 2, M_TYPE_INT, "m2", m2);
+
+    Matrix *result = matrix_multiply(m1_, m2_);
+
+    assert_matrix_meta(result, 2, 2, M_TYPE_INT, "m1m2");
+    assert_matrix_data(result, expected);
+
+    free_and_check(&m1_);
+    free_and_check(&m2_);
+    free_and_check(&result);
+
+    test_success();
+}
+
 void run_matrix_tests()
 {
     printf("\n=== Matrix Tests ===\n");
@@ -218,6 +254,7 @@ void run_matrix_tests()
     test_matrix_to_string();
     test_new_matrix_with_2D_array();
     test_get_matrix_name();
+    test_multiply_matrices();
 
     printf("\nMatrix tests finished.\n");
 }

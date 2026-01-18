@@ -4,6 +4,8 @@
 #include <string.h>
 
 static size_t get_element_size(m_type_t type);
+static const char *type_to_string(m_type_t type);
+static const char *concat(const char *s1, const char *s2);
 
 Matrix *new_matrix(size_t row, size_t col, m_type_t type, const char *name)
 {
@@ -21,7 +23,17 @@ Matrix *new_matrix(size_t row, size_t col, m_type_t type, const char *name)
     m->row = row;
     m->col = col;
     m->type = type;
-    m->name = name;
+
+    if (name && *name != '\0') {
+        m->name = strdup(name);
+        if (!m->name) {
+            ERROR("Failed to duplicate matrix name\n");
+            free(m);
+            return NULL;
+        }
+    } else {
+        m->name = NULL;
+    }
 
     size_t elem_size = get_element_size(type);
     if (elem_size == 0) {
@@ -131,6 +143,59 @@ int matrix_to_string(const Matrix *m, char *buf, size_t bufsize)
     return total;
 }
 
+Matrix *matrix_multiply(Matrix *m1, Matrix *m2)
+{
+    // check the row, col size
+    if (m1->col != m2->row) {
+        ERROR("multiply: m1(%zu x %zu) m2(%zu x %zu) size mismatch\n", m1->row, m1->col, m2->row, m2->col);
+        return NULL;
+    }
+
+    if (m1->type != m2->type) {
+        ERROR("multiply: m1(%s) m2(%s) type mismatch\n", type_to_string(m1->type), type_to_string(m2->type));
+        return NULL;
+    }
+
+    Matrix *m3 = new_matrix(m1->row, m2->col, m1->type, concat(m1->name, m2->name));
+
+    int n = m1->col;
+
+    // sum += A[row][k] * B[k][col]; try to flat array
+#define MULTIPLY(type)                                            \
+    do {                                                          \
+        const type *f1 = m1->data;                                \
+        const type *f2 = m2->data;                                \
+        type *f3 = m3->data;                                      \
+        type sum = 0;                                             \
+        for (int k = 0; k < n; k++) {                             \
+            sum += f1[row * m1->col + k] * f2[k * m2->col + col]; \
+        }                                                         \
+        f3[row * m3->col + col] = sum;                            \
+    } while (0)
+
+    for (size_t row = 0; row < m3->row; row++) {
+        for (size_t col = 0; col < m3->col; col++) {
+            switch (m3->type) {
+            case M_TYPE_INT:
+                MULTIPLY(int);
+                break;
+            case M_TYPE_FLOAT:
+                MULTIPLY(float);
+                break;
+            case M_TYPE_DOUBLE:
+                MULTIPLY(double);
+                break;
+            default:
+                ERROR("multiply: wrong type\n");
+                return NULL;
+            }
+        }
+    }
+
+#undef MULTIPLY
+    return m3;
+}
+
 void print_matrix(const Matrix *m)
 {
     if (!m) {
@@ -159,6 +224,9 @@ void free_matrix(Matrix **m_ptr)
     if (m->data) {
         free(m->data);
     }
+    if (m->name) {
+        free(m->name);
+    }
     free(m);
     *m_ptr = NULL;
 }
@@ -177,11 +245,33 @@ static size_t get_element_size(m_type_t type)
     }
 }
 
+static const char *type_to_string(m_type_t type)
+{
+    switch (type) {
+    case M_TYPE_INT:
+        return "int";
+    case M_TYPE_FLOAT:
+        return "float";
+    case M_TYPE_DOUBLE:
+        return "double";
+    default:
+        return "none";
+    }
+}
+
+static const char *concat(const char *s1, const char *s2)
+{
+    char *result = malloc(strlen(s1) + strlen(s2) + 1);
+    strcpy(result, s1);
+    strcat(result, s2);
+    return result;
+}
+
 // Returns length of name written (excluding \0), or -1 on error/truncation
 int get_matrix_name(const char *filepath, char *out_buf, size_t bufsize)
 {
     if (!filepath || !out_buf || bufsize == 0) {
-        ERROR("Invalid arguments");
+        ERROR("Invalid arguments\n");
         return -1;
     }
 
