@@ -46,13 +46,15 @@ clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR)
 
 run: $(APP_BIN)
-	./$(APP_BIN) matrix/*.txt # add all files in matrix/
+	./$(APP_BIN) matrix/*.txt # add all files in matrix/ directory
 
 bear:
 	make clean
 	bear -- make
 
 valgrind:
+	make clean
+	make $(APP_BIN)
 	valgrind -s --leak-check=full --show-leak-kinds=all ./$(APP_BIN) matrix/*.txt
 
 valgrind-test:	

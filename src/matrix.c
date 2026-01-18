@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+static size_t get_element_size(m_type_t type);
+
 Matrix *new_matrix(size_t row, size_t col, m_type_t type, const char *name)
 {
     if (row <= 0 || col <= 0) {
@@ -14,10 +16,6 @@ Matrix *new_matrix(size_t row, size_t col, m_type_t type, const char *name)
     if (!m) {
         ERROR("Failed to allocate Matrix struct\n");
         return NULL;
-    }
-
-    if (!name) {
-        name = "(null)";
     }
 
     m->row = row;
@@ -59,7 +57,6 @@ Matrix *new_matrix_with_2D_array(size_t row, size_t col, m_type_t type, const ch
     memcpy(m->data, array, row * col * get_element_size(type));
     return m;
 }
-Matrix *new_matrix_from_file(size_t row, size_t col, m_type_t type, char *name, FILE *file);
 
 // Returns number of characters written (excluding null terminator),
 // or negative value on error / truncation
@@ -99,9 +96,9 @@ int matrix_to_string(const Matrix *m, char *buf, size_t bufsize)
         break;
     }
 
-    APPEND("Matrix: %zu × %zu, type = %s, name = %s\n",
-        m->row, m->col, type_str,
-        m->name ? m->name : "(null)");
+    APPEND("Matrix (%s): %zu × %zu, type = %s\n",
+        m->name ? m->name : "NULL",
+        m->row, m->col, type_str);
 
     if (!m->data || m->row == 0 || m->col == 0) {
         APPEND(" (empty)\n");
@@ -130,8 +127,6 @@ int matrix_to_string(const Matrix *m, char *buf, size_t bufsize)
         }
         APPEND("\n");
     }
-
-    APPEND("\n");
 
     return total;
 }
@@ -168,7 +163,7 @@ void free_matrix(Matrix **m_ptr)
     *m_ptr = NULL;
 }
 
-size_t get_element_size(m_type_t type)
+static size_t get_element_size(m_type_t type)
 {
     switch (type) {
     case M_TYPE_INT:
@@ -180,4 +175,31 @@ size_t get_element_size(m_type_t type)
     default:
         return 0;
     }
+}
+
+// Returns length of name written (excluding \0), or -1 on error/truncation
+int get_matrix_name(const char *filepath, char *out_buf, size_t bufsize)
+{
+    if (!filepath || !out_buf || bufsize == 0) {
+        ERROR("Invalid arguments");
+        return -1;
+    }
+
+    const char *basename = strrchr(filepath, '/');
+    basename = basename ? basename + 1 : filepath;
+
+    const char *last_dot = strrchr(basename, '.');
+
+    size_t name_len = last_dot && last_dot > basename
+        ? (size_t)(last_dot - basename)
+        : strlen(basename);
+
+    if (name_len >= bufsize) {
+        ERROR("Buffer too small");
+        return -1; // buffer too small
+    }
+
+    strncpy(out_buf, basename, name_len);
+    out_buf[name_len] = '\0';
+    return (int)name_len;
 }

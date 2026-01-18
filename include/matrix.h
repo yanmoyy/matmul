@@ -28,13 +28,13 @@ typedef struct Matrix {
 
 Matrix *new_matrix(size_t row, size_t col, m_type_t type, const char *name);
 Matrix *new_matrix_with_2D_array(size_t row, size_t col, m_type_t type, const char *name, void *array);
-Matrix *new_matrix_from_file(size_t row, size_t col, m_type_t type, char *name, FILE *file);
 
 Matrix *multiply_matrices(Matrix *m1, Matrix *m2);
 int matrix_to_string(const Matrix *m, char *buf, size_t bufsize);
 void print_matrix(const Matrix *m);
 void free_matrix(Matrix **m);
-// Helpers
-size_t get_element_size(m_type_t type);
+
+// helper
+int get_matrix_name(const char *filepath, char *out_buf, size_t bufsize);
 
 #endif

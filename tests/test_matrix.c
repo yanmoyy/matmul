@@ -10,9 +10,8 @@ static void assert_matrix_meta(const Matrix *m, size_t row, size_t col, m_type_t
     assert(m->row == row);
     assert(m->col == col);
     assert(m->type == type);
-    assert(m->name != NULL);
     if (name == NULL) {
-        assert(strcmp(m->name, "(null)") == 0);
+        assert(m->name == NULL);
     } else {
         assert(strcmp(m->name, name) == 0);
     }
@@ -60,7 +59,6 @@ static void assert_matrix_data(const Matrix *m, const void *expected)
     }
 
 #undef CHECK
-
     assert(!mismatch_found);
 }
 
@@ -138,18 +136,77 @@ static void test_matrix_to_string()
     int len = matrix_to_string(m, buf, sizeof buf);
     assert(len > 0);
 
-    const char *expected = "Matrix: 2 × 3, type = int, name = test\n"
+    const char *expected = "Matrix (test): 2 × 3, type = int\n"
                            "Data:\n"
                            "       1        2        3 \n"
-                           "       4        5        6 \n"
-                           "\n";
+                           "       4        5        6 \n";
 
     if (strcmp(buf, expected) != 0) {
         print_string_diff(buf, expected);
         test_fail("matrix_to_string failed");
         return;
     }
+
     free_and_check(&m);
+
+    // test matrix_to_string with NULL name
+
+    m = new_matrix_with_2D_array(2, 3, M_TYPE_INT, NULL, data_int);
+    assert_matrix_meta(m, 2, 3, M_TYPE_INT, NULL);
+    len = matrix_to_string(m, buf, sizeof buf);
+    assert(len > 0);
+
+    expected = "Matrix (NULL): 2 × 3, type = int\n"
+               "Data:\n"
+               "       1        2        3 \n"
+               "       4        5        6 \n";
+
+    if (strcmp(buf, expected) != 0) {
+        print_string_diff(buf, expected);
+        test_fail("matrix_to_string failed");
+        return;
+    }
+
+    free_and_check(&m);
+
+    test_success();
+}
+
+static void test_get_matrix_name()
+{
+    test_start("get_matrix_name");
+
+    typedef struct {
+        const char *filepath;
+        const char *expected;
+        bool is_error;
+    } test_case_t;
+
+    const test_case_t tests[] = {
+        { "matrix/A.txt", "A", false },
+        { "/data/B.csv", "B", false },
+        { "simple.dat", "simple", false },
+        { "folder/sub/no-extension", "no-extension", false },
+        { "weird.name.with.dots.txt",
+            "weird.name.with.dots",
+            false },
+        { "./C", "C", false },
+        { "justname", "justname", false },
+        { NULL, NULL, true }
+    };
+
+    size_t test_count = sizeof tests / sizeof *tests;
+
+    for (size_t i = 0; i < test_count; i++) {
+        char buf[1024];
+        int ret = get_matrix_name(tests[i].filepath, buf, sizeof buf);
+        if (tests[i].is_error) {
+            assert(ret == -1);
+            continue;
+        }
+        assert(ret == (int)strlen(tests[i].expected));
+        assert(strcmp(buf, tests[i].expected) == 0);
+    }
 
     test_success();
 }
@@ -160,6 +217,7 @@ void run_matrix_tests()
     test_new_matrix_basic();
     test_matrix_to_string();
     test_new_matrix_with_2D_array();
+    test_get_matrix_name();
 
     printf("\nMatrix tests finished.\n");
 }
