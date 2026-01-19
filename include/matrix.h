@@ -1,43 +1,31 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
+#include <stdbool.h>
 #include <stddef.h>
-#include <stdio.h>
 
-typedef enum {
-    M_TYPE_INT,
-    M_TYPE_FLOAT,
-    M_TYPE_DOUBLE,
-} m_type_t;
-
-typedef enum {
-    INITIAL,
-    ROW_STEP,
-    COL_STEP,
-    MAT_STEP,
-    FINISH,
-} m_step_t;
+#define MAX_ROW 100
+#define MAX_COL 100
+#define MAX_NAME_LEN 1000
 
 typedef struct Matrix {
-    m_type_t type;
     size_t row;
     size_t col;
     char *name;
-    void *data; // 2D (array of array)
+    double *data; // double type of data
 } Matrix;
 
-Matrix *new_matrix(size_t row, size_t col, m_type_t type, const char *name);
-Matrix *new_matrix_with_2D_array(size_t row, size_t col, m_type_t type, const char *name, void *array);
-
+// 2nd Version (used by main)
+Matrix *matrix_load_from_file(const char *filepath);
+void matrix_print(const Matrix *m);
 Matrix *matrix_multiply(Matrix *m1, Matrix *m2);
-Matrix *copy_matrix(Matrix *m);
+void matrix_free(Matrix **m);
 
-int matrix_to_string(const Matrix *m, char *buf, size_t bufsize);
-void print_matrix(const Matrix *m);
-void print_matrix_simple(const Matrix *m);
-void free_matrix(Matrix **m);
+// (used by matrix_test)
+Matrix *matrix_new(size_t row, size_t col, const char *name);
+Matrix *matrix_new_with_array(size_t row, size_t col, const char *name, void *array);
 
-// helper
-int get_matrix_name(const char *filepath, char *out_buf, size_t bufsize);
-
+// Helper functions
+bool all_input_files_exist(char *filepaths[], int count);
+int file_path_to_name(const char *filepath, char *out_buf, size_t bufsize);
 #endif

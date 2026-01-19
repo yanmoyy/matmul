@@ -70,3 +70,8 @@ m21 m22 m23
 - Implement functions for matrix and multiply
 - memory leakage handling at unit tests
 - Implement copy function for easy memory management
+
+# Fixes
+
+- Try to reduce 'main' function
+- Use double type (or type detection)
