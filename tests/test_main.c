@@ -7,6 +7,6 @@ int main()
 {
     run_array_tests();
     run_matrix_tests();
-    test_summary(); // Replaces the hardcoded message
+    test_summary();
     return 0;
 }

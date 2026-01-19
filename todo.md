@@ -69,7 +69,8 @@ m21 m22 m23
 
 # Note
 
-- use dynamic array for matrix
-  - fixed size: memory leak
-- how to make unit test on c?
-  - use Unity (unit test framework)
+- Makefile for dev environment
+- use dynamic array for files
+- Implement functions for matrix and multiply
+- memory leakage handling at unit tests
+- Implement copy function for easy memory management

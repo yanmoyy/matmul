@@ -92,21 +92,7 @@ int matrix_to_string(const Matrix *m, char *buf, size_t bufsize)
         total += n;                                       \
     } while (0)
 
-    const char *type_str;
-    switch (m->type) {
-    case M_TYPE_INT:
-        type_str = "int";
-        break;
-    case M_TYPE_FLOAT:
-        type_str = "float";
-        break;
-    case M_TYPE_DOUBLE:
-        type_str = "double";
-        break;
-    default:
-        type_str = "unknown";
-        break;
-    }
+    const char *type_str = type_to_string(m->type);
 
     APPEND("Matrix (%s): %zu × %zu, type = %s\n",
         m->name ? m->name : "NULL",
@@ -139,6 +125,8 @@ int matrix_to_string(const Matrix *m, char *buf, size_t bufsize)
         }
         APPEND("\n");
     }
+
+#undef APPEND
 
     return total;
 }
@@ -198,6 +186,16 @@ Matrix *matrix_multiply(Matrix *m1, Matrix *m2)
     return m3;
 }
 
+Matrix *copy_matrix(Matrix *m)
+{
+    if (!m) {
+        ERROR("copy: try to copy null\n");
+        return NULL;
+    }
+
+    return new_matrix_with_2D_array(m->row, m->col, m->type, m->name, m->data);
+}
+
 void print_matrix(const Matrix *m)
 {
     if (!m) {
@@ -213,6 +211,39 @@ void print_matrix(const Matrix *m)
     } else {
         printf("[matrix output truncated or error (%d)]\n", len);
         printf("Matrix: %zu × %zu, type = ?\n", m->row, m->col);
+    }
+}
+
+void print_matrix_simple(const Matrix *m)
+{
+    if (!m) {
+        printf("(null matrix)\n");
+        return;
+    }
+
+    if (m->name) {
+        printf("%s =\n", m->name);
+    } else {
+        printf("NULL =\n");
+    }
+    for (size_t i = 0; i < m->row; i++) {
+        for (size_t j = 0; j < m->col; j++) {
+            switch (m->type) {
+            case M_TYPE_INT:
+                printf("%d ", ((int *)m->data)[i * m->col + j]);
+                break;
+            case M_TYPE_FLOAT:
+                printf("%g ", ((float *)m->data)[i * m->col + j]);
+                break;
+            case M_TYPE_DOUBLE:
+                printf("%g ", ((double *)m->data)[i * m->col + j]);
+                break;
+            default:
+                printf("<?> ");
+                break;
+            }
+        }
+        printf("\n");
     }
 }
 
@@ -257,7 +288,7 @@ static const char *type_to_string(m_type_t type)
     case M_TYPE_DOUBLE:
         return "double";
     default:
-        return "none";
+        return "unknown";
     }
 }
 

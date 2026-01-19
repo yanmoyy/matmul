@@ -42,7 +42,7 @@ void print_string_diff(const char *got, const char *expected)
         if (*p == '\n') {
             printf("\\n\n");
         } else if (*p == ' ') {
-            printf("·"); // middle dot for space
+            printf("·");
         } else {
             printf("%c", *p);
         }

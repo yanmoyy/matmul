@@ -35,6 +35,7 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    Matrix *matrixes[file_num], *result = NULL;
     bool success = false;
 
     for (int i = 0; i < file_num; i++) {
@@ -46,6 +47,7 @@ int main(int argc, char *argv[])
         }
     }
 
+    // STEP 2. Read the matrices
     for (int i = 0; i < file_num; i++) {
         FILE **file_ptr = arr_get(files, i);
         if (file_ptr == NULL || *file_ptr == NULL) {
@@ -76,12 +78,32 @@ int main(int argc, char *argv[])
                 fscanf(file, "%d", &data[i][j]);
             }
         }
+
         Matrix *m = new_matrix_with_2D_array(row, col, M_TYPE_INT, name, data);
-        print_matrix(m);
-        free_matrix(&m);
+        print_matrix_simple(m);
+        matrixes[i] = m;
     }
+
+    // STEP 3. Multiply the matrices
+    for (int i = 0; i < file_num; i++) {
+        if (i == 0) {
+            result = copy_matrix(matrixes[i]);
+            continue;
+        }
+        Matrix *prev = result;
+        result = matrix_multiply(result, matrixes[i]);
+        free_matrix(&prev);
+    }
+
+    print_matrix_simple(result);
     success = true;
+
 cleanup:
+    for (int i = 0; i < file_num; i++) {
+        free_matrix(&matrixes[i]);
+    }
+    free_matrix(&result);
+
     close_files(files);
     arr_free(&files);
     return success ? EXIT_SUCCESS : EXIT_FAILURE;

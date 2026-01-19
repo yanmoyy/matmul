@@ -254,6 +254,28 @@ cleanup:
     T_CHECK_TEST_FAIL("matrix_multiply failed");
 }
 
+static void test_copy_matrix()
+{
+    test_start("copy_matrix");
+
+    int m1[2][3] = {
+        { 1, 2, 3 },
+        { 4, 5, 6 }
+    };
+
+    Matrix *m1_ = new_matrix_with_2D_array(2, 2, M_TYPE_INT, "m1", m1);
+    Matrix *result = copy_matrix(m1_);
+
+    T_ASSERT(check_matrix_meta(result, 2, 2, M_TYPE_INT, "m1"));
+    T_ASSERT(check_matrix_data(result, m1));
+
+cleanup:
+    free_matrix(&m1_);
+    free_matrix(&result);
+
+    T_CHECK_TEST_FAIL("copy_matrix failed");
+}
+
 void run_matrix_tests()
 {
     printf("\n=== Matrix Tests ===\n");
@@ -262,6 +284,7 @@ void run_matrix_tests()
     test_new_matrix_with_2D_array();
     test_get_matrix_name();
     test_multiply_matrices();
+    test_copy_matrix();
 
     printf("\nMatrix tests finished.\n");
 }
