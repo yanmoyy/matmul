@@ -38,7 +38,6 @@ Array *arr_new(size_t initial_cap, size_t elem_size)
 void *arr_get(const Array *arr, size_t index)
 {
     if (arr_out_of_range(arr, index)) {
-        // Optional: could log here, but usually silent return NULL is fine
         return NULL;
     }
     return (char *)arr->data + index * arr->d_size;
@@ -117,7 +116,7 @@ void arr_free(Array **arr_ptr)
     Array *arr = *arr_ptr;
 
     free(arr->data);
-    arr->data = NULL; // optional, but good hygiene
+    arr->data = NULL;
 
     free(arr);
     *arr_ptr = NULL;
@@ -125,7 +124,6 @@ void arr_free(Array **arr_ptr)
 
 bool arr_out_of_range(const Array *arr, size_t index)
 {
-    // Slightly more defensive: check arr != NULL first
     return arr == NULL || index >= arr->len;
 }
 
