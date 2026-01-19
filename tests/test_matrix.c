@@ -133,36 +133,101 @@ cleanup:
     T_CHECK_TEST_FAIL("get_matrix_name failed");
 }
 
+static void check_multiply_and_cleanup(Matrix *m1, Matrix *m2, int exp_r, int exp_c,
+    const char *exp_n, void *exp_data)
+{
+    Matrix *res = matrix_multiply(m1, m2);
+
+    if (exp_data == NULL) {
+        T_ASSERT(res == NULL);
+    } else {
+        T_ASSERT(res != NULL);
+        T_ASSERT(check_matrix_meta(res, exp_r, exp_c, exp_n));
+        T_ASSERT(check_matrix_data(res, exp_data));
+    }
+
+cleanup:
+    matrix_free(&m1);
+    matrix_free(&m2);
+    matrix_free(&res);
+}
+
 static void test_multiply_matrices()
 {
     test_start("multiply_matrices");
-    double m1[2][3] = {
-        { 1, 2, 3 },
-        { 4, 5, 6 }
-    };
-    double m2[3][2] = {
-        { 1, 4 },
-        { 2, 5 },
-        { 3, 6 }
-    };
-    double expected[2][2] = {
-        { 14, 32 },
-        { 32, 77 }
-    };
 
-    Matrix *m1_ = matrix_new_with_array(2, 3, "m1", m1);
-    Matrix *m2_ = matrix_new_with_array(3, 2, "m2", m2);
-    Matrix *result = matrix_multiply(m1_, m2_);
+    // Case: Standard 2x3 * 3x2
+    {
+        double a[2][3] = {
+            { 1, 2, 3 },
+            { 4, 5, 6 },
+        };
+        double b[3][2] = {
+            { 1, 4 },
+            { 2, 5 },
+            { 3, 6 },
+        };
+        double exp[2][2] = {
+            { 14, 32 },
+            { 32, 77 },
+        };
+        Matrix *m1 = matrix_new_with_array(2, 3, "m1", a);
+        Matrix *m2 = matrix_new_with_array(3, 2, "m2", b);
+        check_multiply_and_cleanup(m1, m2, 2, 2, "m1m2", exp);
+    }
 
-    T_ASSERT(check_matrix_meta(result, 2, 2, "m1m2"));
-    T_ASSERT(check_matrix_data(result, expected));
+    // Case: Identity
+    {
+        double a[2][2] = {
+            { 5, 6 },
+            { 7, 8 },
+        };
+        double id[2][2] = {
+            { 1, 0 },
+            { 0, 1 },
+        };
+        Matrix *m1 = matrix_new_with_array(2, 2, "A", a);
+        Matrix *m2 = matrix_new_with_array(2, 2, "I", id);
+        check_multiply_and_cleanup(m1, m2, 2, 2, "AI", a);
+    }
 
-cleanup:
-    matrix_free(&m1_);
-    matrix_free(&m2_);
-    matrix_free(&result);
+    // Case: Dimension mismatch
+    {
+        double a[2][3] = {
+            { 1, 2, 3 },
+            { 4, 5, 6 },
+        };
+        double b[2][2] = {
+            { 1, 4 },
+            { 2, 5 },
+        };
+        void *exp = NULL;
+        Matrix *m1 = matrix_new_with_array(2, 3, "m1", a);
+        Matrix *m2 = matrix_new_with_array(2, 2, "m2", b);
+        check_multiply_and_cleanup(m1, m2, 2, 2, "m1m2", exp);
+    }
 
-    T_CHECK_TEST_FAIL("matrix_multiply failed");
+    // Case: Large-ish numbers
+    {
+        double a[2][2] = {
+            { 1000000.0, -200000.0 },
+            { 0.0001, 999999.0 },
+        };
+        double b[2][2] = {
+            { 0.5, 2.0 },
+            { 1.0, -0.5 },
+        };
+        double exp[2][2] = {
+            { 300000.0, 2100000.0 },
+            { 999999.00005, -499999.4998 },
+        };
+
+        Matrix *m1 = matrix_new_with_array(2, 2, "m1", a);
+        Matrix *m2 = matrix_new_with_array(2, 2, "m2", b);
+        check_multiply_and_cleanup(m1, m2, 2, 2, "m1m2", exp);
+    }
+
+    T_CHECK_TEST_FAIL("matrix_multiply suite failed");
 }
 
 void run_matrix_tests()

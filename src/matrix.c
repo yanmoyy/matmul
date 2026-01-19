@@ -19,7 +19,7 @@ Matrix *matrix_new(size_t row, size_t col, const char *name)
     }
 
     if (strlen(name) > MAX_NAME_LEN) {
-        ERROR("new_matrix: Invalid name length (%s)", name);
+        ERROR("new_matrix: Invalid name length (%s)\n", name);
         return NULL;
     }
 
@@ -202,7 +202,7 @@ int file_path_to_name(const char *filepath, char *out_buf, size_t bufsize)
         : strlen(basename);
 
     if (name_len >= bufsize) {
-        ERROR("Buffer too small");
+        ERROR("file_path_to_name: Buffer too small\n");
         return -1;
     }
 
