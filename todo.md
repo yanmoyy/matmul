@@ -1,9 +1,5 @@
 # Matrix multiplication
 
-# 목표
-
-- 다음과 같이 행렬곱을 수행하는 프로그램 MatMul.exe 를 구현하세요.
-
 ```powershell
 > MatMul.exe A.txt B.txt
 > A =
