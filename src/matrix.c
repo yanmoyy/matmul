@@ -91,12 +91,18 @@ Matrix *matrix_load_from_file(const char *filepath)
         return NULL;
     }
 
-    double arr[row * col];
-    for (int i = 0; i < row * col; i++) {
-        fscanf(file, "%lg", &arr[i]);
+    Matrix *m = matrix_new(row, col, name);
+    if (!m) {
+        ERROR("Failed to new matrix\n");
+        fclose(file);
+        return NULL;
     }
 
-    return matrix_new_with_array(row, col, name, arr);
+    for (int i = 0; i < row * col; i++) {
+        fscanf(file, "%lg", &m->data[i]);
+    }
+
+    return m;
 }
 
 Matrix *matrix_multiply(Matrix *m1, Matrix *m2)
