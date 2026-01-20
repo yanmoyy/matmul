@@ -1,0 +1,8 @@
+include Makefile           # ← or copy most of content
+
+CC = x86_64-w64-mingw32-gcc
+APP_BIN := $(APP_BIN).exe
+TEST_BIN := $(TEST_BIN).exe
+
+# You can also add
+CFLAGS += -D_WIN32 -D__USE_MINGW_ANSI_STDIO=1   # better printf behaviour

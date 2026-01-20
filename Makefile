@@ -46,8 +46,8 @@ clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR)
 
 run: $(APP_BIN)
-	# ./$(APP_BIN) matrix/*.txt # add all files in matrix/ directory
-	./$(APP_BIN) A.txt B.txt # for answer
+	./$(APP_BIN) matrix/*.txt # add all files in matrix/ directory
+	# ./$(APP_BIN) A.txt B.txt # for answer
 
 bear:
 	make clean

@@ -15,13 +15,13 @@ typedef struct Matrix {
     double *data; // double type of data
 } Matrix;
 
-// 2nd Version (used by main)
+// used by main
 Matrix *matrix_load_from_file(const char *filepath);
 void matrix_print(const Matrix *m);
 Matrix *matrix_multiply(Matrix *m1, Matrix *m2);
 void matrix_free(Matrix **m);
 
-// (used by matrix_test)
+// used by matrix_test
 Matrix *matrix_new(size_t row, size_t col, const char *name);
 Matrix *matrix_new_with_array(size_t row, size_t col, const char *name, void *array);
 
