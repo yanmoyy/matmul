@@ -124,17 +124,13 @@ Matrix *matrix_multiply(Matrix *m1, Matrix *m2)
 
     int n = m1->col;
 
-    // sum += A[row][k] * B[k][col]; try to flat array
-    double *f1 = m1->data;
-    double *f2 = m2->data;
-    double *f3 = m3->data;
     for (size_t row = 0; row < m3->row; row++) {
         for (size_t col = 0; col < m3->col; col++) {
             double sum = 0;
             for (int k = 0; k < n; k++) {
-                sum += f1[row * m1->col + k] * f2[k * m2->col + col];
+                sum += m1->data[row * m1->col + k] * m2->data[k * m2->col + col];
             }
-            f3[row * m3->col + col] = sum;
+            m3->data[row * m3->col + col] = sum;
         }
     }
 
